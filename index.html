@@ -8,12 +8,10 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #ffffff; color: #333; overflow: hidden; }
         .container { display: flex; align-items: center; gap: 20px; }
         
-        /* Conteneur de la roue ajusté pour garder les blocs bien dedans */
         .wheel-container { position: relative; width: 380px; height: 380px; border: 2px dashed #cbd5e1; border-radius: 50%; }
         
-        /* Style des rectangles dans le cercle */
         .segment {
-            position: absolute; width: 85px; height: 46px; background: #f8f9fa; border: 1px solid #94a3b8; border-radius: 6px;
+            position: absolute; width: 90px; height: 48px; background: #f8f9fa; border: 1px solid #94a3b8; border-radius: 6px;
             display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.2s ease; transform: translate(-50%, -50%);
             text-align: center; padding: 2px;
@@ -21,8 +19,8 @@
         .segment:hover { background: #e0f2fe; border-color: #0284c7; transform: translate(-50%, -50%) scale(1.08); z-index: 10; }
         .segment.active { background: #bae6fd; border-color: #0284c7; font-weight: bold; }
         
-        .case-haute { font-size: 10px; color: #475569; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .case-basse { font-size: 12px; color: #0284c7; font-weight: 600; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .case-haute { font-size: 11px; font-weight: bold; color: #1e293b; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .case-basse { font-size: 11px; color: #0284c7; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
         #info-panel { width: 200px; padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         #info-panel h3 { margin-top: 0; font-size: 14px; color: #1e293b; }
@@ -36,7 +34,7 @@
 
         <div id="info-panel">
             <h3>Détails</h3>
-            <p id="details-text">Cliquez sur un rectangle de la roue.</p>
+            <p id="details-text">Cliquez sur un emplacement de la roue.</p>
         </div>
     </div>
 
@@ -48,19 +46,18 @@
             wheel.innerHTML = '';
 
             const maxItems = Math.min(records.length, 8);
-            const radius = 115; // Rayon adapté pour que les boîtes restent à l'intérieur
-            const centerX = 190; // Centre du conteneur (380 / 2)
+            const radius = 115; 
+            const centerX = 190; 
             const centerY = 190;
 
             if (maxItems === 0) {
-                document.getElementById('details-text').innerText = "Ajoutez des lignes dans votre table Grist pour alimenter la roue.";
+                document.getElementById('details-text').innerText = "Ajoutez des lignes dans votre table Grist.";
                 return;
             }
 
             for (let i = 0; i < maxItems; i++) {
                 const record = records[i];
                 
-                // Répartition mathématique sur 360 degrés (2 * PI)
                 const angle = (i * 2 * Math.PI) / maxItems;
                 const x = centerX + radius * Math.cos(angle);
                 const y = centerY + radius * Math.sin(angle);
@@ -70,13 +67,13 @@
                 div.style.left = `${x}px`;
                 div.style.top = `${y}px`;
 
-                // Récupération des données des colonnes Grist (adaptez les noms si besoin)
-                const valeurHaute = record.CaseHaute || `Ligne ${i+1}`;
-                const valeurBasse = record.CaseBasse || `-`;
+                // Connexion directe avec vos noms de colonnes Grist : emplacement et produit
+                const valeurEmplacement = record.emplacement || `Rack ${i+1}`;
+                const valeurProduit = record.produit || `Vide`;
 
                 div.innerHTML = `
-                    <span class="case-haute">${valeurHaute}</span>
-                    <span class="case-basse">${valeurBasse}</span>
+                    <span class="case-haute">${valeurEmplacement}</span>
+                    <span class="case-basse">${valeurProduit}</span>
                 `;
                 
                 div.onclick = () => {
@@ -84,8 +81,8 @@
                     div.classList.add('active');
 
                     document.getElementById('details-text').innerHTML = `
-                        <strong>${valeurHaute}</strong><br>
-                        Valeur : ${valeurBasse}
+                        <strong>Emplacement :</strong> ${valeurEmplacement}<br>
+                        <strong>Produit :</strong> ${valeurProduit}
                     `;
 
                     grist.setCursorPos({ rowId: record.id });
