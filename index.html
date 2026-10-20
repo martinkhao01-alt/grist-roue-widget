@@ -167,20 +167,42 @@
             if (!records) return;
 
             records.forEach(record => {
-                let emplacement = record.emplacement || record.Emplacement || "";
-                let statut = record.plein_vide || record.plein__vide || record["plein / vide"] || "";
-                let produit = record.produit || record.Produit || "";
+                // Récupération des clés disponibles dans l'objet record
+                const keys = Object.keys(record);
+                
+                // On cherche l'emplacement (première colonne textuelle ou contenant 'emplacement')
+                let emplacement = record.emplacement || record.Emplacement || record[keys[1]] || "";
+                
+                // On récupère toutes les valeurs possibles pour le statut et le produit par recherche large dans les propriétés
+                let statut = "";
+                let produit = "";
+
+                keys.forEach(k => {
+                    let val = record[k];
+                    if (k.toLowerCase().includes('plein') || k.toLowerCase().includes('vide') || val === 'plein' || val === 'vide') {
+                        statut = val;
+                    }
+                    if (k.toLowerCase().includes('produit') || (typeof val === 'string' && val !== 'plein' && val !== 'vide' && val !== emplacement && val.length < 30)) {
+                        // Si ce n'est ni le statut ni l'emplacement, c'est probablement le produit
+                        if (val && val !== emplacement && val !== statut && !String(val).includes('.')) {
+                            produit = val;
+                        }
+                    }
+                });
+
+                // Si on a explicitement un champ produit nommé
+                if (record.produit) produit = record.produit;
 
                 if (!emplacement) return;
 
-                // Extraction du chiffre (1 à 8 ou MQ) et du niveau (haut/bas)
+                // Normalisation du texte de l'emplacement (gère "1", "R 1", "MQ")
                 let matchNum = String(emplacement).match(/([1-8]|MQ)/i);
                 let matchNiveau = String(emplacement).match(/(haut|bas)/i);
 
                 if (matchNum && matchNiveau) {
                     let num = matchNum[0].toUpperCase();
                     let niv = matchNiveau[0].toLowerCase();
-                    if (num !== "MQ") num = "R" + num; // Ajoute automatiquement le R si absent
+                    if (num !== "MQ") num = "R" + num;
 
                     let stEl = document.getElementById(num + "_" + niv + "_st");
                     let prodEl = document.getElementById(num + "_" + niv + "_prod");
