@@ -167,35 +167,36 @@
             if (!records) return;
 
             records.forEach(record => {
-                // Récupération des clés disponibles dans l'objet record
-                const keys = Object.keys(record);
+                // Récupération directe via les clés de l'objet ou par les valeurs des propriétés
+                let keys = Object.keys(record);
                 
-                // On cherche l'emplacement (première colonne textuelle ou contenant 'emplacement')
+                // On extrait les valeurs indépendamment du nom technique de la colonne
                 let emplacement = record.emplacement || record.Emplacement || record[keys[1]] || "";
-                
-                // On récupère toutes les valeurs possibles pour le statut et le produit par recherche large dans les propriétés
                 let statut = "";
                 let produit = "";
 
+                // Recherche des valeurs textuelles pertinentes dans l'enregistrement
                 keys.forEach(k => {
                     let val = record[k];
-                    if (k.toLowerCase().includes('plein') || k.toLowerCase().includes('vide') || val === 'plein' || val === 'vide') {
+                    if (val === 'plein' || val === 'vide' || String(val).toLowerCase().includes('plein') || String(val).toLowerCase().includes('vide')) {
                         statut = val;
                     }
-                    if (k.toLowerCase().includes('produit') || (typeof val === 'string' && val !== 'plein' && val !== 'vide' && val !== emplacement && val.length < 30)) {
-                        // Si ce n'est ni le statut ni l'emplacement, c'est probablement le produit
-                        if (val && val !== emplacement && val !== statut && !String(val).includes('.')) {
+                });
+
+                // Pour le produit, on prend la valeur textuelle qui n'est ni l'emplacement ni le statut
+                keys.forEach(k => {
+                    let val = record[k];
+                    if (val && val !== emplacement && val !== statut && typeof val === 'string' && val.length < 30) {
+                        if (!val.includes('.') && !val.includes(':')) { // Ignore les dates
                             produit = val;
                         }
                     }
                 });
 
-                // Si on a explicitement un champ produit nommé
                 if (record.produit) produit = record.produit;
-
                 if (!emplacement) return;
 
-                // Normalisation du texte de l'emplacement (gère "1", "R 1", "MQ")
+                // Normalisation du nom de l'emplacement (ex: "1 rack haut", "R 1 haut", etc.)
                 let matchNum = String(emplacement).match(/([1-8]|MQ)/i);
                 let matchNiveau = String(emplacement).match(/(haut|bas)/i);
 
