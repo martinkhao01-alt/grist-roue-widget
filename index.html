@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Cuve Azote - Grist Widget</title>
-    <!-- Chargement de l'API Grist -->
     <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
     <style>
         body {
@@ -12,13 +11,13 @@
             margin: 0;
             padding: 10px;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             box-sizing: border-box;
         }
 
-        /* Le grand cercle représentant la cuve */
         .cuve-cercle {
             width: 520px;
             height: 520px;
@@ -47,7 +46,6 @@
             gap: 12px;
         }
 
-        /* Style d'un bloc Rack (Style PowerPoint) */
         .rack-box {
             border: 1px solid #2b6cb0;
             border-radius: 4px;
@@ -97,14 +95,13 @@
             font-weight: 500;
         }
 
-        /* Couleurs de statut */
         .statut-plein {
-            background-color: #e53e3e !important; /* Rouge */
+            background-color: #e53e3e !important;
             color: white !important;
         }
 
         .statut-vide {
-            background-color: #48bb78 !important; /* Vert */
+            background-color: #48bb78 !important;
             color: white !important;
         }
 
@@ -116,96 +113,89 @@
 <body>
 
     <div class="cuve-cercle">
-        <!-- Ligne du haut : R1 -->
-        <div id="rack-R1" class="rack-box">
+        <!-- R1 -->
+        <div class="rack-box">
             <div class="rack-row"><div class="rack-label">R 1 haut</div><div class="rack-status statut-vide" id="R1_haut_st">vide</div><div class="rack-product" id="R1_haut_prod"></div></div>
             <div class="rack-row"><div class="rack-label">R 1 bas</div><div class="rack-status statut-vide" id="R1_bas_st">vide</div><div class="rack-product" id="R1_bas_prod"></div></div>
         </div>
 
-        <!-- Corps central : Racks de gauche (2, 3, 4) et de droite (5, 6, 8) -->
         <div class="layout-grid">
-            <!-- Colonne Gauche -->
+            <!-- Gauche : R2, R3, R4 -->
             <div class="colonne-racks">
-                <div id="rack-R2" class="rack-box">
+                <div class="rack-box">
                     <div class="rack-row"><div class="rack-label">R 2 haut</div><div class="rack-status statut-vide" id="R2_haut_st">vide</div><div class="rack-product" id="R2_haut_prod"></div></div>
                     <div class="rack-row"><div class="rack-label">R 2 bas</div><div class="rack-status statut-vide" id="R2_bas_st">vide</div><div class="rack-product" id="R2_bas_prod"></div></div>
                 </div>
-                <div id="rack-R3" class="rack-box">
+                <div class="rack-box">
                     <div class="rack-row"><div class="rack-label">R 3 haut</div><div class="rack-status statut-vide" id="R3_haut_st">vide</div><div class="rack-product" id="R3_haut_prod"></div></div>
                     <div class="rack-row"><div class="rack-label">R 3 bas</div><div class="rack-status statut-vide" id="R3_bas_st">vide</div><div class="rack-product" id="R3_bas_prod"></div></div>
                 </div>
-                <div id="rack-R4" class="rack-box">
+                <div class="rack-box">
                     <div class="rack-row"><div class="rack-label">R 4 haut</div><div class="rack-status statut-vide" id="R4_haut_st">vide</div><div class="rack-product" id="R4_haut_prod"></div></div>
                     <div class="rack-row"><div class="rack-label">R 4 bas</div><div class="rack-status statut-vide" id="R4_bas_st">vide</div><div class="rack-product" id="R4_bas_prod"></div></div>
                 </div>
             </div>
 
-            <!-- Colonne Droite -->
+            <!-- Droite : R5, R6, R8 -->
             <div class="colonne-racks">
-                <div id="rack-R5" class="rack-box">
+                <div class="rack-box">
                     <div class="rack-row"><div class="rack-label">R 5 haut</div><div class="rack-status statut-vide" id="R5_haut_st">vide</div><div class="rack-product" id="R5_haut_prod"></div></div>
                     <div class="rack-row"><div class="rack-label">R 5 bas</div><div class="rack-status statut-vide" id="R5_bas_st">vide</div><div class="rack-product" id="R5_bas_prod"></div></div>
                 </div>
-                <div id="rack-R6" class="rack-box">
+                <div class="rack-box">
                     <div class="rack-row"><div class="rack-label">R 6 haut</div><div class="rack-status statut-vide" id="R6_haut_st">vide</div><div class="rack-product" id="R6_haut_prod"></div></div>
                     <div class="rack-row"><div class="rack-label">R 6 bas</div><div class="rack-status statut-vide" id="R6_bas_st">vide</div><div class="rack-product" id="R6_bas_prod"></div></div>
                 </div>
-                <div id="rack-R8" class="rack-box">
+                <div class="rack-box">
                     <div class="rack-row"><div class="rack-label">R 8 haut</div><div class="rack-status statut-vide" id="R8_haut_st">vide</div><div class="rack-product" id="R8_haut_prod"></div></div>
                     <div class="rack-row"><div class="rack-label">R 8 bas</div><div class="rack-status statut-vide" id="R8_bas_st">vide</div><div class="rack-product" id="R8_bas_prod"></div></div>
                 </div>
             </div>
         </div>
 
-        <!-- Ligne du bas : MQ -->
-        <div id="rack-MQ" class="rack-box mq-container">
+        <!-- MQ -->
+        <div class="rack-box mq-container">
             <div class="rack-row"><div class="rack-label" style="background:#1a365d;">MQ haut</div><div class="rack-status statut-vide" id="MQ_haut_st">vide</div><div class="rack-product" id="MQ_haut_prod"></div></div>
             <div class="rack-row"><div class="rack-label" style="background:#1a365d;">MQ bas</div><div class="rack-status statut-vide" id="MQ_bas_st">vide</div><div class="rack-product" id="MQ_bas_prod"></div></div>
         </div>
     </div>
 
     <script>
-        grist.ready({
-            requiredAccess: 'read table'
-        });
+        grist.ready({ requiredAccess: 'read table' });
 
         grist.onRecords(function(records) {
+            if (!records) return;
+
             records.forEach(record => {
-                // Récupération souple des champs quelle que soit la clé dans l'objet record
                 let emplacement = record.emplacement || record.Emplacement || "";
-                
-                // Récupération du champ "plein / vide" (Grist remplace / et espaces par des underscores)
-                let statut = record.plein_vide || record.plein__vide || record["plein / vide"] || record.plein_ / record.plein || "";
-                
+                let statut = record.plein_vide || record.plein__vide || record["plein / vide"] || "";
                 let produit = record.produit || record.Produit || "";
 
                 if (!emplacement) return;
 
-                // Extraction du numéro (1-8 ou MQ) et de la position (haut/bas)
-                let matchNum = emplacement.match(/([1-8]|MQ)/i);
-                let matchNiveau = emplacement.match(/(haut|bas)/i);
+                // Extraction du chiffre (1 à 8 ou MQ) et du niveau (haut/bas)
+                let matchNum = String(emplacement).match(/([1-8]|MQ)/i);
+                let matchNiveau = String(emplacement).match(/(haut|bas)/i);
 
                 if (matchNum && matchNiveau) {
                     let num = matchNum[0].toUpperCase();
                     let niv = matchNiveau[0].toLowerCase();
-                    if (num !== "MQ") num = "R" + num;
+                    if (num !== "MQ") num = "R" + num; // Ajoute automatiquement le R si absent
 
                     let stEl = document.getElementById(num + "_" + niv + "_st");
                     let prodEl = document.getElementById(num + "_" + niv + "_prod");
 
                     if (stEl && prodEl) {
                         let statutTexte = String(statut).trim().toLowerCase();
-
-                        // Mise à jour de la couleur et du statut
+                        
                         if (statutTexte.includes("plein")) {
-                            stEl.textContent = "Plein";
+                            stEl.textContent = "plein";
                             stEl.className = "rack-status statut-plein";
                         } else {
                             stEl.textContent = "vide";
                             stEl.className = "rack-status statut-vide";
                         }
 
-                        // Affichage du produit (pain, frits, orange, etc.)
                         prodEl.textContent = produit || "";
                     }
                 }
