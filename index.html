@@ -2,94 +2,207 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Roue Interactive Grist</title>
+    <title>Cuve Azote - Grist Widget</title>
+    <!-- Chargement de l'API Grist -->
     <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #ffffff; color: #333; overflow: hidden; }
-        .container { display: flex; align-items: center; gap: 20px; }
-        
-        .wheel-container { position: relative; width: 380px; height: 380px; border: 2px dashed #cbd5e1; border-radius: 50%; }
-        
-        .segment {
-            position: absolute; width: 90px; height: 48px; background: #f8f9fa; border: 1px solid #94a3b8; border-radius: 6px;
-            display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.2s ease; transform: translate(-50%, -50%);
-            text-align: center; padding: 2px;
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            box-sizing: border-box;
         }
-        .segment:hover { background: #e0f2fe; border-color: #0284c7; transform: translate(-50%, -50%) scale(1.08); z-index: 10; }
-        .segment.active { background: #bae6fd; border-color: #0284c7; font-weight: bold; }
-        
-        .case-haute { font-size: 11px; font-weight: bold; color: #1e293b; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .case-basse { font-size: 11px; color: #0284c7; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        
-        #info-panel { width: 200px; padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        #info-panel h3 { margin-top: 0; font-size: 14px; color: #1e293b; }
-        #info-panel p { font-size: 12px; color: #475569; margin-bottom: 0; word-break: break-word; }
+
+        /* Le grand cercle représentant la cuve */
+        .cuve-cercle {
+            width: 520px;
+            height: 520px;
+            border: 2px dashed #4a90e2;
+            border-radius: 50%;
+            background-color: rgba(225, 240, 255, 0.4);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .layout-grid {
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .colonne-racks {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* Style d'un bloc Rack (imitation PowerPoint) */
+        .rack-box {
+            border: 1px solid #2b6cb0;
+            border-radius: 4px;
+            overflow: hidden;
+            width: 180px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            font-size: 11px;
+        }
+
+        .rack-row {
+            display: flex;
+            border-bottom: 1px solid #cbd5e0;
+        }
+        .rack-row:last-child {
+            border-bottom: none;
+        }
+
+        .rack-label {
+            background-color: #2b6cb0;
+            color: white;
+            padding: 3px 6px;
+            width: 55px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .rack-status {
+            padding: 3px 6px;
+            width: 45px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .rack-product {
+            padding: 3px 6px;
+            flex-grow: 1;
+            background-color: #edf2f7;
+            color: #2d3748;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Couleurs de statut */
+        .statut-plein {
+            background-color: #e53e3e !important;
+            color: white;
+        }
+
+        .statut-vide {
+            background-color: #48bb78 !important;
+            color: white;
+        }
+
+        /* Bloc MQ centré en bas */
+        .mq-container {
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="wheel-container" id="wheel"></div>
+    <div class="cuve-cercle">
+        <!-- Ligne du haut : R1 -->
+        <div id="rack-R1" class="rack-box">
+            <div class="rack-row"><div class="rack-label">R 1 haut</div><div class="rack-status statut-vide" id="R1_haut_st">vide</div><div class="rack-product" id="R1_haut_prod"></div></div>
+            <div class="rack-row"><div class="rack-label">R 1 bas</div><div class="rack-status statut-vide" id="R1_bas_st">vide</div><div class="rack-product" id="R1_bas_prod"></div></div>
+        </div>
 
-        <div id="info-panel">
-            <h3>Détails</h3>
-            <p id="details-text">Cliquez sur un emplacement de la roue.</p>
+        <!-- Corps central : Racks de gauche (2, 3, 4) et de droite (5, 6, 8) -->
+        <div class="layout-grid">
+            <!-- Colonne Gauche -->
+            <div class="colonne-racks">
+                <div id="rack-R2" class="rack-box">
+                    <div class="rack-row"><div class="rack-label">R 2 haut</div><div class="rack-status statut-vide" id="R2_haut_st">vide</div><div class="rack-product" id="R2_haut_prod"></div></div>
+                    <div class="rack-row"><div class="rack-label">R 2 bas</div><div class="rack-status statut-vide" id="R2_bas_st">vide</div><div class="rack-product" id="R2_bas_prod"></div></div>
+                </div>
+                <div id="rack-R3" class="rack-box">
+                    <div class="rack-row"><div class="rack-label">R 3 haut</div><div class="rack-status statut-vide" id="R3_haut_st">vide</div><div class="rack-product" id="R3_haut_prod"></div></div>
+                    <div class="rack-row"><div class="rack-label">R 3 bas</div><div class="rack-status statut-vide" id="R3_bas_st">vide</div><div class="rack-product" id="R3_bas_prod"></div></div>
+                </div>
+                <div id="rack-R4" class="rack-box">
+                    <div class="rack-row"><div class="rack-label">R 4 haut</div><div class="rack-status statut-vide" id="R4_haut_st">vide</div><div class="rack-product" id="R4_haut_prod"></div></div>
+                    <div class="rack-row"><div class="rack-label">R 4 bas</div><div class="rack-status statut-vide" id="R4_bas_st">vide</div><div class="rack-product" id="R4_bas_prod"></div></div>
+                </div>
+            </div>
+
+            <!-- Colonne Droite -->
+            <div class="colonne-racks">
+                <div id="rack-R5" class="rack-box">
+                    <div class="rack-row"><div class="rack-label">R 5 haut</div><div class="rack-status statut-vide" id="R5_haut_st">vide</div><div class="rack-product" id="R5_haut_prod"></div></div>
+                    <div class="rack-row"><div class="rack-label">R 5 bas</div><div class="rack-status statut-vide" id="R5_bas_st">vide</div><div class="rack-product" id="R5_bas_prod"></div></div>
+                </div>
+                <div id="rack-R6" class="rack-box">
+                    <div class="rack-row"><div class="rack-label">R 6 haut</div><div class="rack-status statut-vide" id="R6_haut_st">vide</div><div class="rack-product" id="R6_haut_prod"></div></div>
+                    <div class="rack-row"><div class="rack-label">R 6 bas</div><div class="rack-status statut-vide" id="R6_bas_st">vide</div><div class="rack-product" id="R6_bas_prod"></div></div>
+                </div>
+                <div id="rack-R8" class="rack-box">
+                    <div class="rack-row"><div class="rack-label">R 8 haut</div><div class="rack-status statut-vide" id="R8_haut_st">vide</div><div class="rack-product" id="R8_haut_prod"></div></div>
+                    <div class="rack-row"><div class="rack-label">R 8 bas</div><div class="rack-status statut-vide" id="R8_bas_st">vide</div><div class="rack-product" id="R8_bas_prod"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ligne du bas : MQ -->
+        <div id="rack-MQ" class="rack-box mq-container">
+            <div class="rack-row"><div class="rack-label" style="background:#1a365d;">MQ haut</div><div class="rack-status statut-vide" id="MQ_haut_st">vide</div><div class="rack-product" id="MQ_haut_prod"></div></div>
+            <div class="rack-row"><div class="rack-label" style="background:#1a365d;">MQ bas</div><div class="rack-status statut-vide" id="MQ_bas_st">vide</div><div class="rack-product" id="MQ_bas_prod"></div></div>
         </div>
     </div>
 
     <script>
-        grist.ready({ requiredAccess: 'full' });
+        grist.ready({
+            requiredOptions: []
+        });
 
         grist.onRecords(function(records) {
-            const wheel = document.getElementById('wheel');
-            wheel.innerHTML = '';
+            // Parcourt chaque ligne de la table Grist pour mettre à jour l'affichage
+            records.forEach(record => {
+                let emplacement = record.emplacement; // ex: "1 rack haut" ou "R 1 haut"
+                let statut = record.plein_vide || record.plein_ / record.plein / "vide"; // selon le nom exact de votre colonne
+                let produit = record.produit || "";
 
-            const maxItems = Math.min(records.length, 8);
-            const radius = 115; 
-            const centerX = 190; 
-            const centerY = 190;
+                if (!emplacement) return;
 
-            if (maxItems === 0) {
-                document.getElementById('details-text').innerText = "Ajoutez des lignes dans votre table Grist.";
-                return;
-            }
+                // Normalisation du texte pour identifier la clé HTML correspondante
+                // On extrait le numéro et le niveau (haut/bas)
+                let matchNum = emplacement.match(/([1-8]|MQ)/i);
+                let matchNiveau = emplacement.match(/(haut|bas)/i);
 
-            for (let i = 0; i < maxItems; i++) {
-                const record = records[i];
-                
-                const angle = (i * 2 * Math.PI) / maxItems;
-                const x = centerX + radius * Math.cos(angle);
-                const y = centerY + radius * Math.sin(angle);
+                if (matchNum && matchNiveau) {
+                    let num = matchNum[0].toUpperCase();
+                    let niv = matchNiveau[0].toLowerCase();
+                    if(num !== "MQ") num = "R" + num;
 
-                const div = document.createElement('div');
-                div.className = 'segment';
-                div.style.left = `${x}px`;
-                div.style.top = `${y}px`;
+                    let stEl = document.getElementById(num + "_" + niv + "_st");
+                    let prodEl = document.getElementById(num + "_" + niv + "_prod");
 
-                // Connexion directe avec vos noms de colonnes Grist : emplacement et produit
-                const valeurEmplacement = record.emplacement || `Rack ${i+1}`;
-                const valeurProduit = record.produit || `Vide`;
+                    if (stEl && prodEl) {
+                        let statutTexte = String(statut).trim().toLowerCase();
+                        
+                        // Gestion du statut (plein ou vide)
+                        if (statutTexte.includes("plein")) {
+                            stEl.textContent = "plein";
+                            stEl.className = "rack-status statut-plein";
+                        } else {
+                            stEl.textContent = "vide";
+                            stEl.className = "rack-status statut-vide";
+                        }
 
-                div.innerHTML = `
-                    <span class="case-haute">${valeurEmplacement}</span>
-                    <span class="case-basse">${valeurProduit}</span>
-                `;
-                
-                div.onclick = () => {
-                    document.querySelectorAll('.segment').forEach(s => s.classList.remove('active'));
-                    div.classList.add('active');
-
-                    document.getElementById('details-text').innerHTML = `
-                        <strong>Emplacement :</strong> ${valeurEmplacement}<br>
-                        <strong>Produit :</strong> ${valeurProduit}
-                    `;
-
-                    grist.setCursorPos({ rowId: record.id });
-                };
-
-                wheel.appendChild(div);
-            }
+                        prodEl.textContent = produit;
+                    }
+                }
+            });
         });
     </script>
 </body>
