@@ -8,7 +8,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f6f9;
+            background-color: transparent;
             margin: 0;
             padding: 10px;
             display: flex;
@@ -24,7 +24,7 @@
             height: 520px;
             border: 2px dashed #4a90e2;
             border-radius: 50%;
-            background-color: rgba(225, 240, 255, 0.4);
+            background-color: rgba(225, 240, 255, 0.3);
             position: relative;
             display: flex;
             flex-direction: column;
@@ -44,23 +44,25 @@
         .colonne-racks {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 12px;
         }
 
-        /* Style d'un bloc Rack (imitation PowerPoint) */
+        /* Style d'un bloc Rack (Style PowerPoint) */
         .rack-box {
             border: 1px solid #2b6cb0;
             border-radius: 4px;
             overflow: hidden;
-            width: 180px;
+            width: 185px;
             background: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
             font-size: 11px;
         }
 
         .rack-row {
             display: flex;
             border-bottom: 1px solid #cbd5e0;
+            height: 22px;
+            align-items: center;
         }
         .rack-row:last-child {
             border-bottom: none;
@@ -69,41 +71,43 @@
         .rack-label {
             background-color: #2b6cb0;
             color: white;
-            padding: 3px 6px;
-            width: 55px;
+            padding: 2px 5px;
+            width: 60px;
             font-weight: bold;
             text-align: center;
+            font-size: 10px;
         }
 
         .rack-status {
-            padding: 3px 6px;
-            width: 45px;
+            padding: 2px 5px;
+            width: 42px;
             font-weight: bold;
             text-align: center;
+            font-size: 10px;
         }
 
         .rack-product {
-            padding: 3px 6px;
+            padding: 2px 5px;
             flex-grow: 1;
-            background-color: #edf2f7;
+            background-color: #ffffff;
             color: #2d3748;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            font-weight: 500;
         }
 
         /* Couleurs de statut */
         .statut-plein {
-            background-color: #e53e3e !important;
-            color: white;
+            background-color: #e53e3e !important; /* Rouge */
+            color: white !important;
         }
 
         .statut-vide {
-            background-color: #48bb78 !important;
-            color: white;
+            background-color: #48bb78 !important; /* Vert */
+            color: white !important;
         }
 
-        /* Bloc MQ centré en bas */
         .mq-container {
             margin-top: 5px;
         }
@@ -162,44 +166,47 @@
 
     <script>
         grist.ready({
-            requiredOptions: []
+            requiredAccess: 'read table'
         });
 
         grist.onRecords(function(records) {
-            // Parcourt chaque ligne de la table Grist pour mettre à jour l'affichage
             records.forEach(record => {
-                let emplacement = record.emplacement; // ex: "1 rack haut" ou "R 1 haut"
-                let statut = record.plein_vide || record.plein_ / record.plein / "vide"; // selon le nom exact de votre colonne
-                let produit = record.produit || "";
+                // Récupération souple des champs quelle que soit la clé dans l'objet record
+                let emplacement = record.emplacement || record.Emplacement || "";
+                
+                // Récupération du champ "plein / vide" (Grist remplace / et espaces par des underscores)
+                let statut = record.plein_vide || record.plein__vide || record["plein / vide"] || record.plein_ / record.plein || "";
+                
+                let produit = record.produit || record.Produit || "";
 
                 if (!emplacement) return;
 
-                // Normalisation du texte pour identifier la clé HTML correspondante
-                // On extrait le numéro et le niveau (haut/bas)
+                // Extraction du numéro (1-8 ou MQ) et de la position (haut/bas)
                 let matchNum = emplacement.match(/([1-8]|MQ)/i);
                 let matchNiveau = emplacement.match(/(haut|bas)/i);
 
                 if (matchNum && matchNiveau) {
                     let num = matchNum[0].toUpperCase();
                     let niv = matchNiveau[0].toLowerCase();
-                    if(num !== "MQ") num = "R" + num;
+                    if (num !== "MQ") num = "R" + num;
 
                     let stEl = document.getElementById(num + "_" + niv + "_st");
                     let prodEl = document.getElementById(num + "_" + niv + "_prod");
 
                     if (stEl && prodEl) {
                         let statutTexte = String(statut).trim().toLowerCase();
-                        
-                        // Gestion du statut (plein ou vide)
+
+                        // Mise à jour de la couleur et du statut
                         if (statutTexte.includes("plein")) {
-                            stEl.textContent = "plein";
+                            stEl.textContent = "Plein";
                             stEl.className = "rack-status statut-plein";
                         } else {
                             stEl.textContent = "vide";
                             stEl.className = "rack-status statut-vide";
                         }
 
-                        prodEl.textContent = produit;
+                        // Affichage du produit (pain, frits, orange, etc.)
+                        prodEl.textContent = produit || "";
                     }
                 }
             });
